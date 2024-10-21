@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Account</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-width: 400px;
+            margin: auto;
+            background-color: white;
+        }
+
+        .logout-button {
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .logout-button:hover {
+            background-color: #cc0000;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Your Account Information</h1>
+        <h2 id="welcomeMessage"></h2>
+        <div id="userData"></div>
+        <button class="logout-button" id="logoutButton">Logout</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+    <script type="module">
+        // Firebase configuration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3DzrrKgTNpnv9TFuYwYXktSubhobX2so",
+            authDomain: "mahmoud-93d67.firebaseapp.com",
+            projectId: "mahmoud-93d67",
+            storageBucket: "mahmoud-93d67.appspot.com",
+            messagingSenderId: "506125040822",
+            appId: "1:506125040822:web:ffff0c76907fb554897a17",
+            measurementId: "G-MT4X5SF958"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth();
+
+        // Function to display user data
+        const displayUserData = (userId) => {
+            const userRef = ref(database, 'users/' + userId);
+            get(userRef).then(snapshot => {
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    document.getElementById('userData').innerHTML = `
+                        <p><strong>Name:</strong> ${userData.name}</p>
+                        <p><strong>Email:</strong> ${userData.email}</p>
+                        <p><strong>Country:</strong> ${userData.country || 'N/A'}</p>
+                    `;
+                } else {
+                    document.getElementById('userData').innerHTML = 'No user data found.';
+                }
+            }).catch(error => {
+                console.error('Error fetching user data:', error);
+                document.getElementById('userData').innerHTML = 'Error fetching user data.';
+            });
+        };
+
+        // Check if user is logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                document.getElementById('welcomeMessage').textContent = `Welcome, ${user.email}!`;
+                displayUserData(user.uid); // Fetch user data using their UID
+            } else {
+                // No user is signed in
+                window.location.href = 'index.html'; // Redirect to index page if not signed in
+            }
+        });
+
+        // Logout functionality
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html'; // Redirect to index page on logout
+            }).catch(error => {
+                console.error('Error signing out:', error);
+            });
+        });
+    </script>
+</body>
+
+</html>

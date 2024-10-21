@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Data Table</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>User Data Table</h1>
+    <table id="userData">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Country</th>
+            </tr>
+        </thead>
+        <tbody id="userDataBody">
+            <!-- User data will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <!-- Firebase JavaScript SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+    <script>
+        // Firebase configuration
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3DzrrKgTNpnv9TFuYwYXktSubhobX2so",
+            authDomain: "mahmoud-93d67.firebaseapp.com",
+            projectId: "mahmoud-93d67",
+            storageBucket: "mahmoud-93d67.appspot.com",
+            messagingSenderId: "506125040822",
+            appId: "1:506125040822:web:ffff0c76907fb554897a17",
+            measurementId: "G-MT4X5SF958"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const usersRef = database.ref('users');
+
+        // Function to display users in table format
+        function displayUsersInTable(users) {
+            const tableBody = document.getElementById('userDataBody');
+            let tableHtml = '';
+
+            users.forEach(user => {
+                const { name, email, country } = user;
+                tableHtml += `<tr><td>${name}</td><td>${email}</td><td>${country}</td></tr>`;
+            });
+
+            tableBody.innerHTML = tableHtml;
+        }
+
+        // Read users from Firebase
+        usersRef.once('value')
+            .then(snapshot => {
+                if (snapshot.exists()) {
+                    const usersData = Object.values(snapshot.val());
+                    displayUsersInTable(usersData);
+                } else {
+                    console.log('No users found.');
+                }
+            })
+            .catch(error => {
+                console.error('Error reading users:', error.message);
+            });
+    </script>
+</body>
+
+</html>

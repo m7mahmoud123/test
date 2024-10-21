@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="button"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type="button"] {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        input[type="button"]:hover {
+            background-color: #0056b3;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 1.1em;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        #userData {
+            margin-top: 20px;
+        }
+
+        #signOutBtn {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Firebase Authentication Example</h1>
+
+        <!-- Authentication -->
+        <div id="authContainer">
+            <input type="email" id="email" placeholder="Enter email">
+            <input type="password" id="password" placeholder="Enter password">
+            <input type="button" id="signInBtn" value="Sign In">
+            <input type="button" id="signUpBtn" value="Sign Up">
+        </div>
+
+        <!-- Sign Out Button -->
+        <input type="button" id="signOutBtn" value="Sign Out">
+
+        <!-- User Info -->
+        <div id="userData"></div>
+        <div id="message" class="message"></div>
+    </div>
+
+    <!-- Firebase JS SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+
+    <script type="module">
+        // Import necessary functions from Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNteMuplV_mWg4GILyBY-F7ziKaFz7jx4",
+            authDomain: "master-b71d4.firebaseapp.com",
+            databaseURL: "https://master-b71d4-default-rtdb.firebaseio.com",
+            projectId: "master-b71d4",
+            storageBucket: "master-b71d4.appspot.com",
+            messagingSenderId: "89676912218",
+            appId: "1:89676912218:web:6fb277304c74aaa6e56a63"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+        const database = getDatabase(app);
+
+        // DOM Elements
+        const authContainer = document.getElementById('authContainer');
+        const userDataDiv = document.getElementById('userData');
+        const messageDiv = document.getElementById('message');
+        const signOutBtn = document.getElementById('signOutBtn');
+
+        // Display message function
+        const displayMessage = (message, type) => {
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+        };
+
+        // Handle user authentication state
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                authContainer.style.display = 'none';
+                signOutBtn.style.display = 'block';
+                userDataDiv.textContent = `Welcome, ${user.email}`;
+
+                // Retrieve user data from Firebase
+                const userId = user.uid;
+                get(ref(database, 'users/' + userId))
+                    .then(snapshot => {
+                        if (snapshot.exists()) {
+                            userDataDiv.innerHTML += `<p>Your data: ${JSON.stringify(snapshot.val())}</p>`;
+                        } else {
+                            displayMessage('No data available for this user.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        displayMessage(`Error retrieving user data: ${error.message}`, 'error');
+                    });
+            } else {
+                authContainer.style.display = 'block';
+                signOutBtn.style.display = 'none';
+                userDataDiv.textContent = '';
+            }
+        });
+
+        // Sign Up
+        document.getElementById('signUpBtn').addEventListener('click', () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then(userCredential => {
+                    const userId = userCredential.user.uid;
+                    set(ref(database, 'users/' + userId), {
+                        email: email
+                    }).then(() => {
+                        displayMessage('User created and data saved!', 'success');
+                    });
+                })
+                .catch(error => {
+                    displayMessage(`Error signing up: ${error.message}`, 'error');
+                });
+        });
+
+        // Sign In
+        document.getElementById('signInBtn').addEventListener('click', () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    displayMessage('Signed in successfully!', 'success');
+                })
+                .catch(error => {
+                    displayMessage(`Error signing in: ${error.message}`, 'error');
+                });
+        });
+
+        // Sign Out
+        signOutBtn.addEventListener('click', () => {
+            signOut(auth)
+                .then(() => {
+                    displayMessage('Signed out successfully!', 'success');
+                    userDataDiv.textContent = '';
+                })
+                .catch(error => {
+                    displayMessage(`Error signing out: ${error.message}`, 'error');
+                });
+        });
+    </script>
+</body>
+
+</html>
