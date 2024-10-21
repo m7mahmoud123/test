@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Signup/Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="button"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type="button"] {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        input[type="button"]:hover {
+            background-color: #0056b3;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 1.1em;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Sign Up/Login</h1>
+        <input type="text" id="name" placeholder="Enter Name">
+        <input type="email" id="email" placeholder="Enter Email">
+        <input type="password" id="password" placeholder="Enter Password">
+        <input type="button" id="signUpBtn" value="Sign Up">
+        <input type="button" id="loginBtn" value="Log In">
+        <div id="message" class="message"></div>
+    </div>
+
+    <!-- Firebase JavaScript SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+    <script type="module">
+        // Firebase configuration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3DzrrKgTNpnv9TFuYwYXktSubhobX2so",
+            authDomain: "mahmoud-93d67.firebaseapp.com",
+            projectId: "mahmoud-93d67",
+            storageBucket: "mahmoud-93d67.appspot.com",
+            messagingSenderId: "506125040822",
+            appId: "1:506125040822:web:ffff0c76907fb554897a17",
+            measurementId: "G-MT4X5SF958"
+        };
+
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+        const database = getDatabase(app);
+
+        // Check authentication state on page load
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in, redirect to account page
+                window.location.href = 'account.html';
+            }
+        });
+
+        // Function to display messages
+        const displayMessage = (message, type) => {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+        };
+
+        // Sign up user
+        document.getElementById('signUpBtn').addEventListener('click', () => {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (name && email && password) {
+                createUserWithEmailAndPassword(auth, email, password)
+                    .then((userCredential) => {
+                        const userId = userCredential.user.uid; // Get user ID
+                        set(ref(database, 'users/' + userId), {
+                            name: name,
+                            email: email
+                        }).then(() => {
+                            displayMessage('User signed up successfully!', 'success');
+                            // Redirect to account page
+                            window.location.href = 'account.html';
+                        });
+                    })
+                    .catch((error) => {
+                        displayMessage(`Error signing up: ${error.message}`, 'error');
+                    });
+            } else {
+                displayMessage('Please fill out all fields.', 'error');
+            }
+        });
+
+        // Log in user
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (email && password) {
+                signInWithEmailAndPassword(auth, email, password)
+                    .then(() => {
+                        displayMessage('Logged in successfully!', 'success');
+                        // Redirect to account page
+                        window.location.href = 'account.html';
+                    })
+                    .catch((error) => {
+                        displayMessage(`Error logging in: ${error.message}`, 'error');
+                    });
+            } else {
+                displayMessage('Please enter your email and password.', 'error');
+            }
+        });
+    </script>
+</body>
+
+</html>
